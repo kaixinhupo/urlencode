@@ -79,13 +79,44 @@ func UrlDecode(str string, encoding string) (map[string]string, error) {
 	return rst, nil
 }
 
-func decode(str string, isChinese bool) (string, error) {
+// 对输入字符出按照指定编码进行UrlEncode处理
+//
+// @Param encoding 支持uft8 gbk gb2312 gb18030编码方式
+func Encode(str string, encoding string) (string, error) {
+	if str == "" {
+		return "", nil
+	}
+	isChinese := strings.Contains(chinese, encoding)
+	isUtf8 := strings.Contains(utf8s, encoding)
 
+	if !(isChinese || isUtf8) {
+		return "", errors.New("Unrecognized encoding")
+	}
+	return encode(str, isChinese), nil
+}
+
+// 解码UrlEncode编码的字符串
+//
+// @Param encoding 支持uft8 gbk gb2312 gb18030编码方式
+func Decode(str string, encoding string) (string, error) {
+	if str == "" {
+		return "", nil
+	}
+	isChinese := strings.Contains(chinese, encoding)
+	isUtf8 := strings.Contains(utf8s, encoding)
+
+	if !(isChinese || isUtf8) {
+		return "", errors.New("Unrecognized encoding")
+	}
+	return decode(str, isChinese)
+}
+
+func decode(str string, isChinese bool) (string, error) {
 	runes := []rune(str)
 	length := len(runes)
 	buf := new(bytes.Buffer)
 	i := 0
-	for ; i < length; {
+	for i < length {
 		r := runes[i]
 		if r != '%' {
 			buf.WriteRune(r)
