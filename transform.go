@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"io/ioutil"
@@ -156,11 +155,6 @@ func encode(str string, isChinese bool) string {
 		} else {
 			data = p[0:c]
 		}
-		for _, v := range data {
-			fmt.Print(v)
-			fmt.Print(",")
-		}
-		fmt.Println("")
 
 		target := make([]byte, len(data)*2)
 		hex.Encode(target, data)
