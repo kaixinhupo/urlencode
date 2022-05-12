@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"golang.org/x/text/transform"
 	"io/ioutil"
+	"sort"
 	"strings"
 	"unicode/utf8"
+
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
 const (
@@ -31,20 +33,25 @@ func UrlEncode(params map[string]string, encoding string) (string, error) {
 	isUtf8 := strings.Contains(utf8s, encoding)
 
 	if !(isChinese || isUtf8) {
-		return "", errors.New("Unrecognized encoding")
+		return "", errors.New("unrecognized encoding")
 	}
 
+	keys := make([]string, 0, len(params))
+	for k := range params {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
 	builder := strings.Builder{}
-	for k, v := range params {
+	for _, k := range keys {
 		builder.WriteString(encode(k, isChinese))
 		builder.WriteByte('=')
-		builder.WriteString(encode(v, isChinese))
+		builder.WriteString(encode(params[k], isChinese))
 		builder.WriteByte('&')
 	}
 	str := builder.String()
-	if strings.HasSuffix(str, "&") {
-		str = str[0 : len(str)-1]
-	}
+	str = strings.TrimSuffix(str, "&")
+
 	return str, nil
 }
 
@@ -59,7 +66,7 @@ func UrlDecode(str string, encoding string) (map[string]string, error) {
 	isUtf8 := strings.Contains(utf8s, encoding)
 
 	if !(isChinese || isUtf8) {
-		return nil, errors.New("Unrecognized encoding")
+		return nil, errors.New("unrecognized encoding")
 	}
 
 	parts := strings.Split(str, "&")
@@ -89,7 +96,7 @@ func Encode(str string, encoding string) (string, error) {
 	isUtf8 := strings.Contains(utf8s, encoding)
 
 	if !(isChinese || isUtf8) {
-		return "", errors.New("Unrecognized encoding")
+		return "", errors.New("unrecognized encoding")
 	}
 	return encode(str, isChinese), nil
 }
@@ -105,7 +112,7 @@ func Decode(str string, encoding string) (string, error) {
 	isUtf8 := strings.Contains(utf8s, encoding)
 
 	if !(isChinese || isUtf8) {
-		return "", errors.New("Unrecognized encoding")
+		return "", errors.New("unrecognized encoding")
 	}
 	return decode(str, isChinese)
 }
@@ -138,9 +145,8 @@ func decode(str string, isChinese bool) (string, error) {
 }
 
 func encode(str string, isChinese bool) string {
-	runes := []rune(str)
 	builder := strings.Builder{}
-	for _, r := range runes {
+	for _, r := range str {
 
 		if !shouldEscape(r) {
 			builder.WriteRune(r)
